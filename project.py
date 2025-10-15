@@ -2,38 +2,87 @@
 from task import Task
 
 class Project:
-    """Holds multiple tasks and enforces validation rules."""
+    """Represents a project that contains multiple tasks."""
 
-    def __init__(self, name):
-        self.name = self._validate_name(name)
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
         self.tasks = []
 
-    def _validate_name(self, name):
-        if not name or len(name.strip()) < 3:
-            raise ValueError("[ERROR] Project name must be at least 3 characters.")
-        return name.strip()
-
-    def add_task(self, task: Task, max_tasks: int):
-        if len(self.tasks) >= max_tasks:
-            raise ValueError("[ERROR] Task limit reached for this project.")
-        if any(t.title.lower() == task.title.lower() for t in self.tasks):
-            raise ValueError("[ERROR] Task title already exists in this project.")
+    # -------------------------------
+    # CRUD METHODS FOR TASKS
+    # -------------------------------
+    def add_task(self, task: Task):
+        """Add a Task object to this project."""
         self.tasks.append(task)
+        print(f"[SUCCESS] Task '{task.title}' added to project '{self.name}'.")
 
-    def remove_task(self, title: str):
-        self.tasks = [t for t in self.tasks if t.title.lower() != title.lower()]
+    def delete_task(self, task_title: str):
+        """Delete a task by its title."""
+        for task in self.tasks:
+            if task.title == task_title:
+                self.tasks.remove(task)
+                print(f"[SUCCESS] Task '{task_title}' deleted from project '{self.name}'.")
+                return
+        print("[ERROR] Task not found.")
 
-    def get_task(self, title: str):
-        for t in self.tasks:
-            if t.title.lower() == title.lower():
-                return t
-        raise ValueError("[ERROR] Task not found.")
+    def get_task(self, task_title: str):
+        """Find and return a task object by its title, or None if not found."""
+        for task in self.tasks:
+            if task.title == task_title:
+                return task
+        return None
 
-    def __str__(self):
-        result = f"\n📁 Project: {self.name}\n"
+    def show_tasks(self):
+        """Display all tasks in this project."""
         if not self.tasks:
-            result += "  (No tasks yet)\n"
+            print(f"No tasks in project '{self.name}'.")
         else:
+            print(f"\nTasks in project '{self.name}':")
             for t in self.tasks:
-                result += f"  - {t}\n"
-        return result
+                print(f"  - {t}")
+
+    # -------------------------------
+    # EDIT FEATURE (Phase 2)
+    # -------------------------------
+    def edit(self, new_name=None, new_description=None):
+        """
+        Edit project name/description with validation.
+        The duplicate name validation occurs in Manager.
+        """
+        updated = False
+
+        if new_name:
+            if len(new_name) > 30:
+                print("[ERROR] Project name must be <= 30 characters.")
+                return False
+            self.name = new_name.strip()
+            updated = True
+
+        if new_description:
+            if len(new_description) > 150:
+                print("[ERROR] Project description must be <= 150 characters.")
+                return False
+            self.description = new_description.strip()
+            updated = True
+
+        if not updated:
+            print("[INFO] Nothing to update.")
+            return False
+
+        print("[SUCCESS] Project updated successfully.")
+        return True
+
+    # -------------------------------
+    # OUTPUT STRING (for CLI display)
+    # -------------------------------
+    def __str__(self):
+        """String representation for printing project details."""
+        output = f"Project: {self.name}\nDescription: {self.description}"
+        if not self.tasks:
+            output += "\n(No tasks yet)"
+        else:
+            output += "\nTasks:"
+            for task in self.tasks:
+                output += f"\n  - {task}"
+        return output
