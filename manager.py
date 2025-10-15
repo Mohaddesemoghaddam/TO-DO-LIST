@@ -1,77 +1,57 @@
 # manager.py
 import os
+from dotenv import load_dotenv
 from project import Project
 from task import Task
 
+load_dotenv()
+
 class Manager:
-    """
-    Handles in-memory management of projects and tasks.
-    """
+    """Manages all projects and tasks with validation and in-memory storage."""
+
     def __init__(self):
-        self.projects: list[Project] = []
+        self.projects = []
         self.max_projects = int(os.getenv("MAX_NUMBER_OF_PROJECT", 5))
         self.max_tasks = int(os.getenv("MAX_NUMBER_OF_TASK", 20))
-        self.project_counter = 1
-        self.task_counter = 1
 
-    # ---------- Project Methods ----------
-    def create_project(self, name: str, description: str):
+    def add_project(self, name):
+        if any(p.name.lower() == name.lower() for p in self.projects):
+            raise ValueError("[ERROR] Project name already exists.")
         if len(self.projects) >= self.max_projects:
-            raise ValueError("Maximum number of projects reached.")
-        if any(p.name == name for p in self.projects):
-            raise ValueError("A project with this name already exists.")
-        project = Project(self.project_counter, name, description)
+            raise ValueError("[ERROR] Maximum number of projects reached.")
+        project = Project(name)
         self.projects.append(project)
-        self.project_counter += 1
-        return project
+        print(f"✅ Project '{name}' created successfully.")
 
-    def list_projects(self):
+    def show_all_projects(self):
         if not self.projects:
-            return ["No projects found."]
-        return [str(p) for p in self.projects]
+            print("No projects found.")
+        for p in self.projects:
+            print(p)
 
-    def edit_project(self, project_id: int, new_name=None, new_description=None):
-        project = self._get_project(project_id)
-        if new_name and any(p.name == new_name for p in self.projects if p.id != project_id):
-            raise ValueError("Duplicate project name not allowed.")
-        if new_name:
-            project.name = new_name
-        if new_description:
-            project.description = new_description
-        return project
+    def find_project(self, name):
+        for p in self.projects:
+            if p.name.lower() == name.lower():
+                return p
+        raise ValueError("[ERROR] Project not found.")
 
-    def delete_project(self, project_id: int):
-        self.projects = [p for p in self.projects if p.id != project_id]
+    def add_task_to_project(self, project_name, title, description, deadline):
+        project = self.find_project(project_name)
+        task = Task(title, description, deadline)
+        project.add_task(task, self.max_tasks)
+        print(f"✅ Task '{title}' added to project '{project_name}'.")
 
-    # ---------- Task Methods ----------
-    def add_task(self, project_id: int, title: str, description: str, deadline: str):
-        project = self._get_project(project_id)
-        if len(project.tasks) >= self.max_tasks:
-            raise ValueError("Max number of tasks reached for this project.")
-        task = Task(self.task_counter, title, description, deadline)
-        self.task_counter += 1
-        project.add_task(task)
-        return task
+    def update_task_status(self, project_name, task_title, new_status):
+        project = self.find_project(project_name)
+        task = project.get_task(task_title)
+        task.status = task._validate_status(new_status)
+        print(f"✅ Updated '{task_title}' status to '{new_status}'.")
 
-    def list_tasks(self, project_id: int):
-        project = self._get_project(project_id)
-        return project.list_tasks() if project.tasks else ["No tasks found."]
+    def delete_task_from_project(self, project_name, task_title):
+        project = self.find_project(project_name)
+        project.remove_task(task_title)
+        print(f"🗑️ Task '{task_title}' deleted from project '{project_name}'.")
 
-    def edit_task(self, project_id: int, task_id: int, **kwargs):
-        project = self._get_project(project_id)
-        for task in project.tasks:
-            if task.id == task_id:
-                task.update(**kwargs)
-                return task
-        raise ValueError("Task not found.")
-
-    def delete_task(self, project_id: int, task_id: int):
-        project = self._get_project(project_id)
-        project.remove_task(task_id)
-
-    # ---------- Helpers ----------
-    def _get_project(self, project_id: int) -> Project:
-        for project in self.projects:
-            if project.id == project_id:
-                return project
-        raise ValueError("Project not found.")
+    def delete_project(self, name):
+        self.projects = [p for p in self.projects if p.name.lower() != name.lower()]
+        print(f"🗑️ Project '{name}' deleted successfully.")

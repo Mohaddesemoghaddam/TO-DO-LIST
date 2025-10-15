@@ -1,55 +1,35 @@
 # task.py
-
 from datetime import datetime
 
 class Task:
-    """
-    Represents a single task within a project.
-    """
+    """Represents a single task with basic validation."""
+    VALID_STATUSES = ("todo", "doing", "done")
 
-    VALID_STATUSES = ["TODO", "IN_PROGRESS", "DONE"]
+    def __init__(self, title, description, deadline, status="todo"):
+        self.title = self._validate_title(title)
+        self.description = description.strip()
+        self.deadline = self._validate_deadline(deadline)
+        self.status = self._validate_status(status)
 
-    def __init__(self, task_id: int, title: str, description: str, deadline: str, status: str = "TODO"):
-        # --- Initialization with validations ---
-        if len(title) > 30:
-            raise ValueError("Task title must be 30 characters or fewer.")
-        if len(description) > 150:
-            raise ValueError("Task description must be 150 characters or fewer.")
-        if status not in self.VALID_STATUSES:
-            raise ValueError(f"Invalid status. Choose from {self.VALID_STATUSES}.")
+    def _validate_title(self, title: str):
+        if not title or len(title.strip()) < 3:
+            raise ValueError("[ERROR] Task title must be at least 3 characters.")
+        return title.strip()
+
+    def _validate_deadline(self, deadline_str: str):
+        """Check date format YYYY-MM-DD."""
         try:
-            datetime.strptime(deadline, "%Y-%m-%d")
+            datetime.strptime(deadline_str, "%Y-%m-%d")
+            return deadline_str
         except ValueError:
-            raise ValueError("Deadline must be in YYYY-MM-DD format.")
+            raise ValueError("[ERROR] Invalid date format. Use YYYY-MM-DD.")
 
-        self.id = task_id
-        self.title = title
-        self.description = description
-        self.deadline = deadline
-        self.status = status
-
-    def update(self, title=None, description=None, deadline=None, status=None):
-        """
-        Update task fields with validation.
-        """
-        if title:
-            if len(title) > 30:
-                raise ValueError("Task title must be ≤ 30 characters.")
-            self.title = title
-
-        if description:
-            if len(description) > 150:
-                raise ValueError("Task description must be ≤ 150 characters.")
-            self.description = description
-
-        if deadline:
-            datetime.strptime(deadline, "%Y-%m-%d")
-            self.deadline = deadline
-
-        if status:
-            if status not in self.VALID_STATUSES:
-                raise ValueError(f"Invalid status: {status}")
-            self.status = status
+    def _validate_status(self, status: str):
+        status = status.lower()
+        if status not in self.VALID_STATUSES:
+            valid = ", ".join(self.VALID_STATUSES)
+            raise ValueError(f"[ERROR] Invalid status! Choose one of: {valid}")
+        return status
 
     def __str__(self):
-        return f"[{self.id}] {self.title} ({self.status}) - due {self.deadline}"
+        return f"{self.title} | {self.status} | {self.deadline}"

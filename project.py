@@ -1,31 +1,39 @@
 # project.py
-
 from task import Task
 
 class Project:
-    """
-    Represents a project containing multiple tasks.
-    """
+    """Holds multiple tasks and enforces validation rules."""
 
-    def __init__(self, project_id: int, name: str, description: str):
-        if len(name) > 30:
-            raise ValueError("Project name must be 30 characters or fewer.")
-        if len(description) > 150:
-            raise ValueError("Project description must be 150 characters or fewer.")
+    def __init__(self, name):
+        self.name = self._validate_name(name)
+        self.tasks = []
 
-        self.id = project_id
-        self.name = name
-        self.description = description
-        self.tasks: list[Task] = []
+    def _validate_name(self, name):
+        if not name or len(name.strip()) < 3:
+            raise ValueError("[ERROR] Project name must be at least 3 characters.")
+        return name.strip()
 
-    def add_task(self, task: Task):
+    def add_task(self, task: Task, max_tasks: int):
+        if len(self.tasks) >= max_tasks:
+            raise ValueError("[ERROR] Task limit reached for this project.")
+        if any(t.title.lower() == task.title.lower() for t in self.tasks):
+            raise ValueError("[ERROR] Task title already exists in this project.")
         self.tasks.append(task)
 
-    def remove_task(self, task_id: int):
-        self.tasks = [t for t in self.tasks if t.id != task_id]
+    def remove_task(self, title: str):
+        self.tasks = [t for t in self.tasks if t.title.lower() != title.lower()]
 
-    def list_tasks(self):
-        return [str(task) for task in self.tasks]
+    def get_task(self, title: str):
+        for t in self.tasks:
+            if t.title.lower() == title.lower():
+                return t
+        raise ValueError("[ERROR] Task not found.")
 
     def __str__(self):
-        return f"[{self.id}] {self.name} - {len(self.tasks)} tasks"
+        result = f"\n📁 Project: {self.name}\n"
+        if not self.tasks:
+            result += "  (No tasks yet)\n"
+        else:
+            for t in self.tasks:
+                result += f"  - {t}\n"
+        return result
