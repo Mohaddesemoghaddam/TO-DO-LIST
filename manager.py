@@ -120,3 +120,25 @@ class Manager:
             print("[ERROR] Task not found.")
             return
         task.edit(new_title, new_description, new_deadline, new_status)
+
+     # manager.py
+    def show_tasks_of_project(self, project_id):
+        project = self.get_project_by_id(project_id)
+        if not project:
+           print("[ERROR] Project not found.")
+           return
+        if not project.tasks:
+           print("[INFO] No tasks found for this project.")
+           return
+
+        print(f"\nTasks for project: {project.name}")
+        print("-" * 40)
+        for task in project.tasks:
+           print(f"ID: {task.id}")
+           print(f"Title: {task.title}")
+           print(f"Status: {task.status}")
+           print(f"Deadline: {task.deadline or 'N/A'}")
+           print("-" * 40)
+          
+    
+

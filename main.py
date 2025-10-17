@@ -11,7 +11,9 @@ def show_menu():
     print("6. Update Task Status")
     print("7. Delete Task")
     print("8. Delete Project")
-    print("9. Exit")
+    print("9. Show Tasks of a Project")
+    print("10. Exit")
+
     return input("\nChoose an option (1–9): ").strip()
 
 def main():
@@ -78,9 +80,12 @@ def main():
             elif choice == "8":
                 project_name = input("Project name to delete: ").strip()
                 manager.delete_project(project_name)
+            elif choice == "9":
+                project_id = input("Enter project ID: ").strip()
+                manager.show_tasks_of_project(project_id)
 
             # 9️⃣ Exit
-            elif choice == "9":
+            elif choice == "10":
                 print("👋 Exiting. Goodbye!")
                 break
 
