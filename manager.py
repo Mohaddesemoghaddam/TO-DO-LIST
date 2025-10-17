@@ -139,6 +139,14 @@ class Manager:
            print(f"Status: {task.status}")
            print(f"Deadline: {task.deadline or 'N/A'}")
            print("-" * 40)
-          
+    # manager.py
+
+    def get_project_by_id(self, project_identifier):
+        for project in self.projects:
+            if str(project.name) == str(project_identifier):
+                return project
+            return None
+
+         
     
 
