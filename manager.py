@@ -122,8 +122,8 @@ class Manager:
         task.edit(new_title, new_description, new_deadline, new_status)
 
      # manager.py
-    def show_tasks_of_project(self, project_id):
-        project = self.get_project_by_id(project_id)
+    def show_tasks_of_project(self, project_name):
+        project = self.get_project_by_id(project_name)
         if not project:
            print("[ERROR] Project not found.")
            return
@@ -133,8 +133,8 @@ class Manager:
 
         print(f"\nTasks for project: {project.name}")
         print("-" * 40)
-        for task in project.tasks:
-           print(f"ID: {task.id}")
+        for i, task in enumerate(project.tasks, start=1):
+           print(f"Task #{i}")
            print(f"Title: {task.title}")
            print(f"Status: {task.status}")
            print(f"Deadline: {task.deadline or 'N/A'}")

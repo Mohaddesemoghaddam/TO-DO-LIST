@@ -82,7 +82,7 @@ def main():
                 manager.delete_project(project_name)
             elif choice == "9":
                 project_id = input("Enter project name: ").strip()
-                manager.show_tasks_of_project(project_id)
+                manager.show_tasks_of_project(project_name)
 
             # 9️⃣ Exit
             elif choice == "10":
