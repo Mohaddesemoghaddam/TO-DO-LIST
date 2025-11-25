@@ -6,8 +6,7 @@ It allows users to create multiple projects, add and manage tasks inside them, a
 The design strictly follows the **User Stories** and **Acceptance Criteria** defined in the project’s official PDF (Phase 1 & 2).
 
 ---
-
-## 🚀 Features (Phase 1 + Phase 2)
+## 🚀 Features 
 | # | Feature | Description |
 |---|----------|-------------|
 | 1 | **Create Project** | Add new projects with name ≤ 30 char and description ≤ 150 char. |
@@ -18,7 +17,9 @@ The design strictly follows the **User Stories** and **Acceptance Criteria** def
 | 6 | **Update Task Status** | Mark tasks as `todo` → `doing` → `done`. |
 | 7 | **Delete Task** | Remove a specific task from a project. |
 | 8 | **Delete Project** | Cascade deletes all tasks within the project. |
-| 9 | **Exit** | Safely break from the CLI loop. |
+| 9 | **Show Tasks of a Project** | Display all tasks linked to a selected project (title, status, deadline). |
+| 10 | **Exit** | Safely break from the CLI loop. |
+
 
 ---
 
@@ -59,28 +60,6 @@ MAX_NUMBER_OF_TASK=10
 ### 3️⃣ Run the CLI
 ```bash
 python main.py
-```
-
----
-
-## 🧪 Testing (Phase 3 – Optional)
-Automated test cases using **pytest** are located in `tests/`.
-
-Run all:
-```bash
-pytest -v
-```
-
-Sample test (`tests/test_manager.py`):
-```python
-from manager import Manager
-
-def test_add_and_delete_project():
-    m = Manager()
-    m.add_project("TestProj", "Sample")
-    assert any(p.name == "TestProj" for p in m.projects)
-    m.delete_project("TestProj")
-    assert not any(p.name == "TestProj" for p in m.projects)
 ```
 
 ---
