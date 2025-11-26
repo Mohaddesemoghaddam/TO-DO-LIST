@@ -1,11 +1,25 @@
-from .base import AppException, ValidationError
+from .base import AppException
 
-class ServiceError(AppException):
+class ServiceException(AppException):
+    """Base class for all service layer exceptions."""
     pass
 
-class ProjectValidationError(ValidationError):
+
+class ProjectNotFoundException(ServiceException):
+    """Raised when a project is not found."""
     pass
 
-class TaskValidationError(ValidationError):
+
+class ProjectValidationError(ServiceException):
+    """Raised when project data is invalid."""
     pass
 
+
+class TaskNotFoundException(ServiceException):
+    """Raised when a task is not found."""
+    pass
+
+
+class TaskValidationError(ServiceException):
+    """Raised when task data is invalid."""
+    pass
