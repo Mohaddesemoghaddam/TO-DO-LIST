@@ -1,29 +1,28 @@
-from typing import Generic, TypeVar, Type
 from sqlalchemy.orm import Session
+from typing import Generic, TypeVar, Type
 
-ModelType = TypeVar("ModelType")
+T = TypeVar("T")  # ORM model type
 
-class BaseRepository(Generic[ModelType]):
-    def __init__(self, session: Session, model: Type[ModelType]):
-        self.session = session
+class BaseRepository(Generic[T]):
+    def __init__(self, model: Type[T]):
         self.model = model
 
-    def add(self, instance: ModelType):
-        self.session.add(instance)
-        self.session.commit()
-        self.session.refresh(instance)
-        return instance
+    def get_all(self, db: Session):
+        return db.query(self.model).all()
 
-    def get(self, id: int) -> ModelType | None:
-        return self.session.get(self.model, id)
+    def get_by_id(self, db: Session, id: int):
+        return db.query(self.model).filter(self.model.id == id).first()
 
-    def get_all(self):
-        return self.session.query(self.model).all()
+    def create(self, db: Session, obj: T):
+        db.add(obj)
+        db.commit()
+        db.refresh(obj)
+        return obj
 
-    def delete(self, id: int) -> bool:
-        instance = self.get(id)
-        if not instance:
-            return False
-        self.session.delete(instance)
-        self.session.commit()
+    def delete(self, db: Session, id: int):
+        obj = self.get_by_id(db, id)
+        if obj is None:
+            return None
+        db.delete(obj)
+        db.commit()
         return True
