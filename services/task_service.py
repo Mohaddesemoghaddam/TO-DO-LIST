@@ -155,3 +155,32 @@ class TaskService:
             raise InvalidStatusException(
                 f"Invalid status. Choose one of: {', '.join(self.VALID_STATUSES)}"
             )
+    
+        # ------------------------------------
+    # AUTO-CLOSE OVERDUE TASKS (Scheduled)
+    # ------------------------------------
+    def autoclose_overdue_tasks(self):
+        """
+        Close all tasks where:
+        - deadline < today
+        - status != 'done'
+        Returns: number of closed tasks
+        """
+        with SessionLocal() as db:
+            today = datetime.now().date()
+
+            # پیدا کردن تسک‌های دیرکرددار
+            overdue_tasks = (
+                db.query(self.task_repo.model)
+                .filter(self.task_repo.model.deadline < today)
+                .filter(self.task_repo.model.status != "done")
+                .all()
+            )
+
+            # بستن آنها
+            for task in overdue_tasks:
+                task.status = "done"
+
+            db.commit()
+
+            return len(overdue_tasks)
