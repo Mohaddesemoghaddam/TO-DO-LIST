@@ -23,3 +23,8 @@ class TaskNotFoundException(ServiceException):
 class TaskValidationError(ServiceException):
     """Raised when task data is invalid."""
     pass
+class ProjectNotFoundException(ServiceException):
+    pass
+
+class ProjectAlreadyExistsException(ServiceException):
+    pass
