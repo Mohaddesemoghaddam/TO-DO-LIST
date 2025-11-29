@@ -1,5 +1,3 @@
-# app/api/controllers/user_controller.py
-
 from fastapi import HTTPException, status
 from app.services.user_service import UserService
 from app.schemas.user.user_create import UserCreate
@@ -16,9 +14,7 @@ class UserController:
         return UserResponse.from_orm(user)
 
     def get_user(self, user_id: int) -> UserResponse:
-        user = self.user_service.get_user_by_id(user_id)
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+        user = self.user_service.get_user(user_id)   # اصلاح نام متد
         return UserResponse.from_orm(user)
 
     def update_user(self, user_id: int, data: UserUpdate) -> UserResponse:
@@ -30,5 +26,6 @@ class UserController:
         return {"message": "User deleted successfully"}
 
     def list_users(self) -> list[UserResponse]:
-        users = self.user_service.get_all_users()
+        users = self.user_service.list_users()   # اصلاح نام متد
         return [UserResponse.from_orm(u) for u in users]
+

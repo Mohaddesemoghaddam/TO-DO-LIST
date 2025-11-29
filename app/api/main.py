@@ -1,13 +1,9 @@
 from fastapi import FastAPI
-from app.api.routers.users_router import router as users_router
+
+from app.api.routers.user_router import router as user_router
 from app.api.routers.projects_router import router as projects_router
 from app.api.routers.tasks_router import router as tasks_router
-from fastapi import FastAPI
-from app.api.routers.user_router import router as user_router
 
-app = FastAPI(title="ToDoList API - Phase 3")
-
-app.include_router(user_router)
 
 app = FastAPI(
     title="ToDoList API",
@@ -16,6 +12,6 @@ app = FastAPI(
 )
 
 # Register Routers
-app.include_router(users_router, prefix="/users", tags=["Users"])
-app.include_router(projects_router, prefix="/projects", tags=["Projects"])
-app.include_router(tasks_router, prefix="/tasks", tags=["Tasks"])
+app.include_router(user_router)
+app.include_router(projects_router)
+app.include_router(tasks_router)

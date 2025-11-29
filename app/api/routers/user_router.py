@@ -1,11 +1,8 @@
-# app/api/routers/user_router.py
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from db.session import get_db
 from app.services.user_service import UserService
-from app.repositories.user_repository import UserRepository
 from app.api.controllers.user_controller import UserController
 
 from app.schemas.user.user_create import UserCreate
@@ -17,8 +14,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 
 def get_user_controller(db: Session = Depends(get_db)) -> UserController:
-    repository = UserRepository(db)
-    service = UserService(repository)
+    service = UserService(db)
     controller = UserController(service)
     return controller
 
