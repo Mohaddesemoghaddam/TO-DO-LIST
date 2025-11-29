@@ -3,6 +3,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from db.base import Base
 from models import project, task
+from models import user
 
 
 from logging.config import fileConfig
