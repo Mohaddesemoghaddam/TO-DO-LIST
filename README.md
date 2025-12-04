@@ -1,99 +1,129 @@
-# 🗂️ ToDoList – Python OOP (In-Memory)
+
+# 🗂️ ToDoList – Python OOP → RDB → FastAPI Web API
+
+## ⚠️ Deprecation Notice
+The **CLI version** (`main.py`, `manager.py`) is now **deprecated** and will be removed in the next phase.
+Please use the **FastAPI Web API** instead.
+
+---
 
 ## 📍 Overview
-This project implements a **command-line ToDoList manager** built entirely with **Object-Oriented Programming (OOP)** principles in Python.  
-It allows users to create multiple projects, add and manage tasks inside them, and edit or delete items — all in memory (no database).  
-The design strictly follows the **User Stories** and **Acceptance Criteria** defined in the project’s official PDF (Phase 1 & 2).
+This repository contains the complete evolution of the ToDoList application across 3 phases:
 
----
-## 🚀 Features 
-| # | Feature | Description |
-|---|----------|-------------|
-| 1 | **Create Project** | Add new projects with name ≤ 30 char and description ≤ 150 char. |
-| 2 | **Show All Projects** | Display all projects sorted by creation time. |
-| 3 | **Add Task to Project** | Each project can hold limited tasks (max from `.env`); defaults to status = `todo`. |
-| 4 | **Edit Project** | Change project name/description (unique name validation). |
-| 5 | **Edit Task** | Change any task field (title, description, deadline, status). |
-| 6 | **Update Task Status** | Mark tasks as `todo` → `doing` → `done`. |
-| 7 | **Delete Task** | Remove a specific task from a project. |
-| 8 | **Delete Project** | Cascade deletes all tasks within the project. |
-| 9 | **Show Tasks of a Project** | Display all tasks linked to a selected project (title, status, deadline). |
-| 10 | **Exit** | Safely break from the CLI loop. |
+- **Phase 1:** In‑Memory Python OOP + CLI  
+- **Phase 2:** PostgreSQL + SQLAlchemy ORM + Alembic Migrations  
+- **Phase 3:** FastAPI Web API with Controllers, Services, Repositories, Schemas
 
+The current active version of the project runs through the **Web API**, not the CLI.
 
 ---
 
-## 🧠 Architecture
-```
-📦 todo_list/
-│
-├── main.py          # CLI interface (menu-driven)
-├── manager.py       # Handles CRUD for projects & tasks
-├── project.py       # Project class (name, desc, tasks)
-├── task.py          # Task class (title, desc, deadline, status)
-├── .env             # MAX_NUMBER_OF_PROJECT, MAX_NUMBER_OF_TASK
-└── tests/
-    ├── test_manager.py
-    └── test_task.py
-```
+# ✅ Project Progress Summary
 
-- **Manager** acts as a controller connecting the CLI and model classes.  
-- **In‑Memory:** All data live during runtime — no file or DB persistence.  
-- **Validation:** Input size, status choice, and date format (`YYYY‑MM‑DD`) enforced at the class level.
+## Phase 1 – Python OOP (In‑Memory)
+- Implemented classes: `Project`, `Task`, `Manager`
+- CLI menu system (`main.py`)
+- Full CRUD for Projects and Tasks
+- In‑memory storage (no DB)
+- Robust validation (name, description, deadlines, status)
+- Unit tests: `test_task.py`, `test_manager.py`
 
 ---
 
-## ⚙️ Installation & Setup
-
-### 1️⃣ Clone the repo
-```bash
-git clone https://github.com/<Mohaddesemoghaddam>/todo-list-oop.git
-cd todo-list-oop
-```
-
-### 2️⃣ Create `.env`
-```
-MAX_NUMBER_OF_PROJECT=5
-MAX_NUMBER_OF_TASK=10
-```
-
-### 3️⃣ Run the CLI
-```bash
-python main.py
-```
+## Phase 2 – Database Migration (RDB)
+- Added PostgreSQL (Docker)
+- SQLAlchemy ORM models for:
+  - `projects`
+  - `tasks`
+  - `users`
+- Added DB session + base models
+- Added Repository layer
+- Full Alembic migration chain (valid & verified)
+- Auto-close overdue tasks command
+- Database schema successfully tested
 
 ---
 
-## 💾 Sample CLI Session
-```
-=== ToDoList CLI ===
-1. Create Project
-2. Show All Projects
-3. Add Task to Project
-...
-Choose an option (1–9): 1
-Enter project name: StudyPlan
-Enter project description: Semester goal tracking system
-[SUCCESS] Project created successfully.
+## Phase 3 – Web API (FastAPI)
+- Designed full multi-layer architecture:
+  - Routes
+  - Controllers
+  - Services
+  - Repositories
+  - Schemas (Request/Response)
+- Implemented complete Project API (CRUD)
+- Implemented complete Task API (CRUD)
+- Implemented User API
+- Fixed legacy import-path issues
+- Fully functional Swagger UI
+- Postman branch prepared for testing
+- Web API replaces CLI as the main interface
 
-Choose an option (1–9): 3
-Project name: StudyPlan
-Task title: Math revision
-Task description: Review chapters 1–3
-Deadline (YYYY-MM-DD): 2025-11-01
-[SUCCESS] Task added to project 'StudyPlan'
+---
+
+# 🎛️ CLI (Deprecated)
+The CLI version exists only for historical and grading purposes.
+
+### CLI Features
+- Create / edit / delete projects
+- Add / edit / delete tasks
+- Update status
+- Show all tasks of a project
+- Menu-driven system
+
+### CLI Structure
+```
+main.py          (DEPRECATED)
+manager.py       (DEPRECATED)
+project.py
+task.py
+.env
+tests/
 ```
 
 ---
 
+# 🌐 Web API (Active System)
 
-## 🧩 Future Improvements
-- Add JSON/SQLite persistence layer.  
-- Implement search/sort for tasks.  
-- Add colored CLI output (using `colorama`).  
-- Integrate date validation via `datetime.date` type.
+### Run FastAPI
+```
+uvicorn app.api.main:app --reload
+```
+
+### Swagger
+```
+http://127.0.0.1:8000/docs
+```
+
+### API Directory Structure
+```
+app/
+ ├── api/
+ │    ├── main.py
+ │    └── routes/
+ │         ├── project_router.py
+ │         ├── task_router.py
+ │         └── user_router.py
+ ├── controllers/
+ ├── services/
+ ├── repositories/
+ ├── schemas/
+ │     ├── project/
+ │     ├── task/
+ │     └── user/
+ └── models/
+```
 
 ---
 
+# 🧩 Future Improvements
+- JWT authentication
+- React/Vue frontend
+- Redis caching
+- Background tasks (Celery/RQ)
+- CI/CD pipeline
 
-_This project was developed as part of the **ToDoList – Python OOP (In‑Memory)** assignment (Phase 1 & 2) to demonstrate CRUD, input validation, OOP design, and adherence to Git Policy._
+---
+
+# 📄 License
+This project was developed as part of the **ToDoList – Software Engineering Course (AUT)**.
