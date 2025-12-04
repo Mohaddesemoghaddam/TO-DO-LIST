@@ -1,11 +1,8 @@
-from pydantic import BaseModel
-from typing import Optional
-
+from pydantic import BaseModel, ConfigDict
 
 class ProjectResponse(BaseModel):
     id: int
     name: str
-    description: Optional[str]
+    description: str | None = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
