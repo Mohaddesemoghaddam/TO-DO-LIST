@@ -30,9 +30,7 @@ def list_tasks(controller = Depends(get_task_controller)):
     return controller.list_tasks()
 
 
-@router.get("/project/{project_id}", response_model=list[TaskResponse])
-def list_tasks_of_project(project_id: int, controller = Depends(get_task_controller)):
-    return controller.list_tasks_of_project(project_id)
+
 
 
 @router.put("/{task_id}", response_model=TaskResponse)
