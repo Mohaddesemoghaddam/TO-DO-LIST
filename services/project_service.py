@@ -196,107 +196,183 @@
 #         return project
 # services/project_service.py
 
-from sqlalchemy.orm import Session
+# from sqlalchemy.orm import Session
+# from db.session import SessionLocal
+# from repositories.project_repository import ProjectRepository
+# from fastapi import HTTPException
+
+# class ProjectService:
+
+#     def __init__(self, db=None):
+#         # اگر DB از API تزریق شد:
+#         if db is not None:
+#             self.db = db
+#         else:
+#             # اگر از CLI فراخوانی شد:
+#             self.db = SessionLocal()
+
+#         self.project_repo = ProjectRepository(self.db)
+
+#     # ---------------------------
+#     # CLI METHODS (name-based)
+#     # ---------------------------
+
+#     def add_project(self, name: str, description: str):
+#         existing = self.project_repo.get_by_name(name)
+#         if existing:
+#             raise Exception("Project already exists with this name.")
+#         return self.project_repo.create(name=name, description=description)
+
+#     def get_all_projects(self):
+#         return self.project_repo.get_all()
+
+#     def get_project_by_name(self, name: str):
+#         return self.project_repo.get_by_name(name)
+
+#     def edit_project(self, name: str, new_name=None, new_desc=None):
+#         project = self.project_repo.get_by_name(name)
+#         if not project:
+#             raise Exception("Project not found.")
+
+#         updates = {}
+#         if new_name:
+#             updates["name"] = new_name
+#         if new_desc:
+#             updates["description"] = new_desc
+
+#         return self.project_repo.update(project, **updates)
+
+#     def delete_project(self, name: str):
+#         project = self.project_repo.get_by_name(name)
+
+#         if not project:
+#             raise HTTPException(status_code=404, detail="Project not found")
+
+#         # حذف با شیء، نه ID
+#         return self.project_repo.delete(project)
+
+#     # ---------------------------
+#     # API METHODS (ID-based)
+#     # ---------------------------
+
+#     def api_create_project(self, data):
+#         return self.project_repo.create(
+#             name=data.name,
+#             description=data.description
+#         )
+
+#     def api_get_project(self, project_id: int):
+#         project = self.project_repo.get_by_id(project_id)
+#         if not project:
+#             raise HTTPException(status_code=404, detail="Project not found")
+#         return project
+
+#     def api_update_project(self, project_id: int, data):
+#         project = self.project_repo.get_by_id(project_id)
+#         if not project:
+#             raise HTTPException(status_code=404, detail="Project not found")
+
+#         updates = {}
+#         if data.name is not None:
+#             updates["name"] = data.name
+#         if data.description is not None:
+#             updates["description"] = data.description
+
+#         return self.project_repo.update(project, **updates)
+
+#     def api_delete_project(self, project_id: int):
+#         project = self.project_repo.get_by_id(project_id)
+#         if not project:
+#             raise HTTPException(status_code=404, detail="Project not found")
+
+#         self.project_repo.delete(project)
+#         return True
+
+#     def api_list_tasks_of_project(self, project_id: int):
+#         from services.task_service import TaskService
+
+#         project = self.project_repo.get_by_id(project_id)
+#         if not project:
+#             raise HTTPException(status_code=404, detail="Project not found")
+
+#         task_service = TaskService(db=self.db)
+#         return task_service.task_repo.get_tasks_by_project_id(project_id)
+   
+#     def api_list_projects(self):
+#         return self.project_repo.get_all()
 from db.session import SessionLocal
 from repositories.project_repository import ProjectRepository
-from fastapi import HTTPException
+from repositories.task_repository import TaskRepository
+
+from exceptions.service_exceptions import (
+    ProjectNotFoundError,
+    ProjectValidationError,
+    ProjectConflictError,
+)
+
 
 class ProjectService:
 
     def __init__(self, db=None):
-        # اگر DB از API تزریق شد:
-        if db is not None:
-            self.db = db
-        else:
-            # اگر از CLI فراخوانی شد:
-            self.db = SessionLocal()
-
+        self.db = db or SessionLocal()
         self.project_repo = ProjectRepository(self.db)
+        self.task_repo = TaskRepository(self.db)
 
-    # ---------------------------
-    # CLI METHODS (name-based)
-    # ---------------------------
-
+    # CREATE
     def add_project(self, name: str, description: str):
+        name = name.strip()
+
+        if len(name) < 3:
+            raise ProjectValidationError("Project name must be at least 3 characters.")
+
         existing = self.project_repo.get_by_name(name)
         if existing:
-            raise Exception("Project already exists with this name.")
+            raise ProjectConflictError(f"Project '{name}' already exists.")
+
         return self.project_repo.create(name=name, description=description)
 
+    # LIST
     def get_all_projects(self):
         return self.project_repo.get_all()
 
+    # GET ONE
     def get_project_by_name(self, name: str):
-        return self.project_repo.get_by_name(name)
-
-    def edit_project(self, name: str, new_name=None, new_desc=None):
         project = self.project_repo.get_by_name(name)
         if not project:
-            raise Exception("Project not found.")
-
-        updates = {}
-        if new_name:
-            updates["name"] = new_name
-        if new_desc:
-            updates["description"] = new_desc
-
-        return self.project_repo.update(project, **updates)
-
-    def delete_project(self, name: str):
-        project = self.project_repo.get_by_name(name)
-
-        if not project:
-            raise HTTPException(status_code=404, detail="Project not found")
-
-        # حذف با شیء، نه ID
-        return self.project_repo.delete(project)
-
-    # ---------------------------
-    # API METHODS (ID-based)
-    # ---------------------------
-
-    def api_create_project(self, data):
-        return self.project_repo.create(
-            name=data.name,
-            description=data.description
-        )
-
-    def api_get_project(self, project_id: int):
-        project = self.project_repo.get_by_id(project_id)
-        if not project:
-            raise HTTPException(status_code=404, detail="Project not found")
+            raise ProjectNotFoundError(f"Project '{name}' not found.")
         return project
 
-    def api_update_project(self, project_id: int, data):
-        project = self.project_repo.get_by_id(project_id)
+    # UPDATE
+    def edit_project(self, name, new_name=None, new_desc=None):
+        project = self.project_repo.get_by_name(name)
         if not project:
-            raise HTTPException(status_code=404, detail="Project not found")
+            raise ProjectNotFoundError(f"Project '{name}' not found.")
 
-        updates = {}
-        if data.name is not None:
-            updates["name"] = data.name
-        if data.description is not None:
-            updates["description"] = data.description
+        if new_name:
+            existing = self.project_repo.get_by_name(new_name)
+            if existing and existing.id != project.id:
+                raise ProjectConflictError(f"Project '{new_name}' already exists.")
+            project.name = new_name
 
-        return self.project_repo.update(project, **updates)
+        if new_desc:
+            project.description = new_desc
 
-    def api_delete_project(self, project_id: int):
-        project = self.project_repo.get_by_id(project_id)
+        return self.project_repo.update(project)
+
+    # DELETE
+    def delete_project(self, name):
+        project = self.project_repo.get_by_name(name)
         if not project:
-            raise HTTPException(status_code=404, detail="Project not found")
+            raise ProjectNotFoundError(f"Project '{name}' not found.")
+        return self.project_repo.delete(project)
 
-        self.project_repo.delete(project)
-        return True
-
-    def api_list_tasks_of_project(self, project_id: int):
-        from services.task_service import TaskService
-
-        project = self.project_repo.get_by_id(project_id)
+    # LIST TASKS
+    def list_tasks_of_project(self, name):
+        project = self.project_repo.get_by_name(name)
         if not project:
-            raise HTTPException(status_code=404, detail="Project not found")
+            raise ProjectNotFoundError(f"Project '{name}' not found.")
 
-        task_service = TaskService(db=self.db)
-        return task_service.task_repo.get_tasks_by_project_id(project_id)
-   
-    def api_list_projects(self):
-        return self.project_repo.get_all()
+        tasks = self.task_repo.get_tasks_by_project_name(name)
+        return tasks
+
+
