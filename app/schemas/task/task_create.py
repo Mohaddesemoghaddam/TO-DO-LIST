@@ -1,11 +1,12 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from datetime import datetime
-from typing import Optional
-
 
 class TaskCreate(BaseModel):
-    title: str = Field(..., min_length=3, max_length=100)
-    description: Optional[str] = Field(None, max_length=255)
-    deadline: Optional[datetime] = None
-    status: Optional[str] = "todo"
-    project_id: int
+    description: str = Field(..., min_length=3, max_length=255)
+    deadline: datetime
+
+    @validator("deadline")
+    def must_be_future(cls, v):
+        if v <= datetime.utcnow():
+            raise ValueError("Deadline must be a future date/time.")
+        return v
