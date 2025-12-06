@@ -1,6 +1,7 @@
 from typing import Optional, ClassVar
 from datetime import datetime
 from sqlalchemy import String, Integer, DateTime, ForeignKey
+from sqlalchemy.sql import func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.base import Base
 
@@ -9,7 +10,6 @@ class Task(Base):
     """ORM Model that represents tasks stored in PostgreSQL."""
     __tablename__ = "tasks"
 
-    # فیلدِ وضعیت‌های مجاز (همون Validation قدیمی)
     VALID_STATUSES: ClassVar[tuple[str, ...]] = ("todo", "doing", "done")
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
@@ -20,6 +20,22 @@ class Task(Base):
 
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), nullable=False)
     project: Mapped["Project"] = relationship("Project", back_populates="tasks")
+
+    # -------------------------------
+    # TIMESTAMP FIELDS (حل مشکل NULL)
+    # -------------------------------
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False
+    )
 
     # -------------------------------
     # VALIDATION METHODS (اختیاری برای CLI)
@@ -50,7 +66,7 @@ class Task(Base):
         return status
 
     # -------------------------------
-    # EDIT / UPDATE FEATURE
+    # EDIT FEATURE (CLI)
     # -------------------------------
     def edit(
         self,
@@ -76,8 +92,5 @@ class Task(Base):
 
         return updated
 
-    # -------------------------------
-    # STRING REPRESENTATION
-    # -------------------------------
     def __repr__(self) -> str:
         return f"<Task(id={self.id}, title='{self.title}', status='{self.status}')>"
