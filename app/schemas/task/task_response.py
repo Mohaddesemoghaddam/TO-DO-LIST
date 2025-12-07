@@ -1,29 +1,17 @@
-# from pydantic import BaseModel
-# from datetime import datetime
-# from typing import Optional
+# app/schemas/task/task_response.py
 
-
-# class TaskResponse(BaseModel):
-#     id: int
-#     title: str
-#     description: Optional[str]
-#     deadline: Optional[datetime]
-#     status: str
-#     project_id: int
-#     created_at: Optional[datetime] = None
-#     updated_at: Optional[datetime] = None
-
-#     class Config:
-#         from_attributes = True
-from pydantic import BaseModel
 from datetime import datetime
+from pydantic import BaseModel, Field, ConfigDict
+
 
 class TaskResponse(BaseModel):
-    id: int
-    description: str
-    deadline: datetime
-    is_completed: bool
-    project_id: int
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        orm_mode = True
+    id: int
+    title: str
+    description: str
+    status: str
+    deadline: datetime | None = Field(None)
+    project_id: int
+    created_at: datetime
+    updated_at: datetime

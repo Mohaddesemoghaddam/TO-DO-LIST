@@ -2,7 +2,7 @@ from pydantic import BaseModel, field_validator
 from typing import Optional
 from dateutil import parser
 
-class TaskUpdate(BaseModel):
+class TaskReplace(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[str] = None
