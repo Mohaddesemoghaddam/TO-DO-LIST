@@ -1,12 +1,12 @@
 from repositories.task_repository import TaskRepository
 from repositories.project_repository import ProjectRepository
-
 from exceptions.service_exceptions import (
     ProjectNotFoundException,
     TaskNotFoundException,
     TaskValidationError
 )
-
+from datetime import datetime
+from models.task import Task
 
 class TaskService:
     def __init__(self, db):
@@ -127,3 +127,23 @@ class TaskService:
         task = self._get_task_or_404(project_name, task_title)
         self.task_repo.delete(task)
         return True
+    # ----------------------------------------------------
+    # CLOSE LATE TASKS
+    # ----------------------------------------------------
+    def close_late_tasks(self):
+        now = datetime.utcnow()
+
+        late_tasks = (
+            self.db.query(Task)
+            .filter(Task.deadline < now)
+            .filter(Task.status != "done")
+            .all()
+        )
+
+        for task in late_tasks:
+            task.status = "done"
+
+        self.db.commit()
+
+        return len(late_tasks)
+
