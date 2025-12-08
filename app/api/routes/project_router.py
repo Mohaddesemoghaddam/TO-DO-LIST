@@ -49,10 +49,13 @@ def update_project(project_name: str, data: ProjectUpdate, controller: ProjectCo
 
 
 # DELETE
-@router.delete("/{project_name}", status_code=204)
+@router.delete("/{project_name}", status_code=200)
 def delete_project(project_name: str, controller: ProjectController = Depends(get_controller)):
     controller.delete_project(project_name)
-    return
+    return {
+        "message": "Project deleted successfully",
+        "project_name": project_name
+    }
 
 
 # LIST TASKS OF PROJECT

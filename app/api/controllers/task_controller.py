@@ -62,6 +62,7 @@ class TaskController:
     def delete_task(self, project_name, task_title):
         try:
             self.service.delete_task(project_name, task_title)
+            print("YOUR TASK DELETE SUSSECFULLY!")
         except (ProjectNotFoundException, TaskNotFoundException) as e:
             raise HTTPException(status_code=404, detail=str(e))
 
