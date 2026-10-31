@@ -1,4 +1,4 @@
-# project.py
+
 from task import Task
 
 class Project:
