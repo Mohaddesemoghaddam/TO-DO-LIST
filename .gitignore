@@ -1,0 +1,26 @@
+# Bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual envs
+.env
+.venv
+venv/
+ENV/
+
+# OS files
+.DS_Store
+
+# Pytest
+.pytest_cache/
+
+# Alembic
+alembic/__pycache__/
+alembic/versions/__pycache__/
+
+# SQLite temp files
+*.db-journal
+
+# Logs
+*.log
+

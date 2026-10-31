@@ -1,4 +1,3 @@
-
 from manager import Manager
 
 def show_menu() -> str:
@@ -24,17 +23,14 @@ def main() -> None:
         choice: str = show_menu()
 
         try:
-            # 1️⃣ Create Project
             if choice == "1":
                 name: str = input("Enter project name: ").strip()
                 description: str = input("Enter project description: ").strip()
                 manager.add_project(name, description)
 
-            # 2️⃣ Show All Projects
             elif choice == "2":
                 manager.show_all_projects()
 
-            # 3️⃣ Add Task
             elif choice == "3":
                 project_name: str = input("Project name: ").strip()
                 title: str = input("Task title: ").strip()
@@ -42,14 +38,12 @@ def main() -> None:
                 deadline: str = input("Deadline (YYYY-MM-DD): ").strip()
                 manager.add_task_to_project(project_name, title, description, deadline)
 
-            # 4️⃣ Edit Project
             elif choice == "4":
                 project_name: str = input("Project name to edit: ").strip()
                 new_name: str | None = input("New project name (blank to skip): ").strip() or None
                 new_desc: str | None = input("New project description (blank to skip): ").strip() or None
                 manager.edit_project(project_name, new_name, new_desc)
 
-            # 5️⃣ Edit Task
             elif choice == "5":
                 project_name: str = input("Project name: ").strip()
                 task_title: str = input("Task title to edit: ").strip()
@@ -59,30 +53,25 @@ def main() -> None:
                 new_status: str | None = input("New task status (todo/doing/done, blank to skip): ").strip() or None
                 manager.edit_task(project_name, task_title, new_title, new_desc, new_deadline, new_status)
 
-            # 6️⃣ Update Only Task Status (shortcut)
             elif choice == "6":
                 project_name: str = input("Project name: ").strip()
                 task_title: str = input("Task title: ").strip()
                 new_status: str = input("New status (todo/doing/done): ").strip()
                 manager.update_task_status(project_name, task_title, new_status)
 
-            # 7️⃣ Delete Task
             elif choice == "7":
                 project_name: str = input("Project name: ").strip()
                 task_title: str = input("Task title to delete: ").strip()
                 manager.delete_task_from_project(project_name, task_title)
 
-            # 8️⃣ Delete Project
             elif choice == "8":
                 project_name: str = input("Project name to delete: ").strip()
                 manager.delete_project(project_name)
 
-            # 9️⃣ Show Tasks of a Project
             elif choice == "9":
                 project_name: str = input("Enter project name: ").strip()
                 manager.show_tasks_of_project(project_name)
 
-            # 🔟 Exit
             elif choice == "10":
                 print("👋 Exiting. Goodbye!")
                 break
@@ -94,4 +83,5 @@ def main() -> None:
             print(f"[ERROR] {e}")
 
 if __name__ == "__main__":
+    print("WARNING: This CLI is deprecated and will be removed in the next phase. Please use the FastAPI-based web API instead.")
     main()

@@ -28,3 +28,27 @@ class ProjectNotFoundException(ServiceException):
 
 class ProjectAlreadyExistsException(ServiceException):
     pass
+# exceptions/service_exceptions.py
+
+class TaskNotFoundError(Exception):
+    pass
+
+class TaskValidationError(Exception):
+    pass
+
+class TaskConflictError(Exception):
+    pass
+
+
+# ---------------------------
+# PROJECT EXCEPTIONS
+# ---------------------------
+
+class ProjectNotFoundError(Exception):
+    pass
+
+class ProjectValidationError(Exception):
+    pass
+
+class ProjectConflictError(Exception):
+    pass

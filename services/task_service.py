@@ -1,169 +1,289 @@
-from sqlalchemy.orm import Session
+# from repositories.task_repository import TaskRepository
+# from repositories.project_repository import ProjectRepository
+# from exceptions.service_exceptions import (
+#     ProjectNotFoundException,
+#     TaskNotFoundException,
+#     TaskValidationError
+# )
+# from datetime import datetime
+# from models.task import Task
+
+# class TaskService:
+#     def __init__(self, db):
+#         self.db = db
+#         self.task_repo = TaskRepository(db)
+#         self.project_repo = ProjectRepository(db)
+
+#     # ----------------------------------------------------
+#     # UTIL – Get Task (with 404 rules)
+#     # ----------------------------------------------------
+#     def _get_task_or_404(self, project_name: str, task_title: str):
+#         task = self.task_repo.get_task_by_project_name_and_title(project_name, task_title)
+#         if task:
+#             return task
+
+#         project = self.project_repo.get_by_name(project_name)
+#         if not project:
+#             raise ProjectNotFoundException(f"Project '{project_name}' not found.")
+
+#         raise TaskNotFoundException(f"Task '{task_title}' not found.")
+
+#     # ----------------------------------------------------
+#     # CREATE (POST)
+#     # ----------------------------------------------------
+#     def create_task(self, project_name: str, data):
+#         project = self.project_repo.get_by_name(project_name)
+#         if not project:
+#             raise ProjectNotFoundException(f"Project '{project_name}' not found.")
+
+#         # check duplicate title
+#         existing = self.task_repo.get_task_by_title(project.id, data.title)
+#         if existing:
+#             raise TaskValidationError(f"Task '{data.title}' already exists in this project.")
+
+#         return self.task_repo.create(
+#             title=data.title,
+#             description=data.description,
+#             deadline=data.deadline,    # already datetime from schema
+#             status=data.status,        # schema validated
+#             project_id=project.id
+#         )
+
+#     # ----------------------------------------------------
+#     # READ
+#     # ----------------------------------------------------
+#     def list_tasks(self, project_name: str):
+#         project = self.project_repo.get_by_name(project_name)
+#         if not project:
+#             raise ProjectNotFoundException(f"Project '{project_name}' not found.")
+#         return self.task_repo.get_tasks_by_project_name(project_name)
+
+#     def get_task(self, project_name: str, task_title: str):
+#         return self._get_task_or_404(project_name, task_title)
+
+#     # # ----------------------------------------------------
+#     # # PUT – Full Replace
+#     # # ----------------------------------------------------
+#     # def replace_task(self, project_name: str, task_title: str, data):
+#     #     task = self._get_task_or_404(project_name, task_title)
+
+#     #     # If title changes → check duplicate
+#     #     if data.title is not None and data.title != task.title:
+#     #         duplicate = self.task_repo.get_task_by_title(task.project_id, data.title)
+#     #         if duplicate:
+#     #             raise TaskValidationError(
+#     #                 f"Task '{data.title}' already exists in this project."
+#     #             )
+
+#     #     task.title = data.title
+#     #     task.description = data.description
+#     #     task.status = data.status
+#     #     task.deadline = data.deadline
+
+#     #     return self.task_repo.update(task)
+
+#     # ----------------------------------------------------
+#     # PATCH – Partial Update
+#     # ----------------------------------------------------
+#     def update_task(self, project_name: str, task_title: str, data):
+#         task = self._get_task_or_404(project_name, task_title)
+
+#         # TITLE
+#         if data.title is not None:
+#             if data.title != task.title:
+#                 duplicate = self.task_repo.get_task_by_title(task.project_id, data.title)
+#                 if duplicate:
+#                     raise TaskValidationError(
+#                         f"Task '{data.title}' already exists in this project."
+#                     )
+#             task.title = data.title
+
+#         # DESCRIPTION
+#         if data.description is not None:
+#             task.description = data.description
+
+#         # STATUS
+#         if data.status is not None:
+#             task.status = data.status
+
+#         # DEADLINE
+#         if data.deadline is not None:
+#             task.deadline = data.deadline
+
+#         return self.task_repo.update(task)
+
+#     # ----------------------------------------------------
+#     # PATCH – STATUS ONLY
+#     # ----------------------------------------------------
+#     def update_status(self, project_name: str, task_title: str, new_status: str):
+#         task = self._get_task_or_404(project_name, task_title)
+#         task.status = new_status
+#         return self.task_repo.update(task)
+
+#     # ----------------------------------------------------
+#     # DELETE
+#     # ----------------------------------------------------
+#     def delete_task(self, project_name: str, task_title: str):
+#         task = self._get_task_or_404(project_name, task_title)
+#         self.task_repo.delete(task)
+#         return True
+#     # ----------------------------------------------------
+#     # CLOSE LATE TASKS
+#     # ----------------------------------------------------
+#     def close_late_tasks(self):
+#         now = datetime.utcnow()
+
+#         late_tasks = (
+#             self.db.query(Task)
+#             .filter(Task.deadline < now)
+#             .filter(Task.status != "done")
+#             .all()
+#         )
+
+#         for task in late_tasks:
+#             task.status = "done"
+
+#         self.db.commit()
+
+#         return len(late_tasks)
+
 from datetime import datetime
-
-from repositories.project_repository import ProjectRepository
+from sqlalchemy.orm import Session
 from repositories.task_repository import TaskRepository
-from db.session import SessionLocal
-
+from repositories.project_repository import ProjectRepository
 from exceptions.service_exceptions import (
     ProjectNotFoundException,
     TaskNotFoundException,
-    TaskValidationError
+    TaskValidationError,
 )
+from models.task import Task
 
 
 class TaskService:
-    VALID_STATUSES = ("todo", "doing", "done")
+    """Service layer for managing task business logic."""
 
-    def __init__(self):
-        self.project_repo = ProjectRepository()
-        self.task_repo = TaskRepository()
+    def __init__(self, db: Session):
+        """Initialize TaskService with DB session and repositories."""
+        self.db: Session = db
+        self.task_repo = TaskRepository(db)
+        self.project_repo = ProjectRepository(db)
 
-    # ------------------------------------
-    # Create Task
-    # ------------------------------------
-    def add_task_to_project(self, project_name, title, description, deadline):
-        with SessionLocal() as db:
+    # ----------------------------------------------------
+    # UTIL – Get Task or Raise 404
+    # ----------------------------------------------------
+    def _get_task_or_404(self, project_name: str, task_title: str) -> Task:
+        """Retrieve a task by project name and title or raise an appropriate exception."""
+        task = self.task_repo.get_task_by_project_name_and_title(project_name, task_title)
+        if task:
+            return task
 
-            project = self.project_repo.get_by_name(db, project_name)
-            if not project:
-                raise ProjectNotFoundException(f"Project '{project_name}' not found.")
+        project = self.project_repo.get_by_name(project_name)
+        if not project:
+            raise ProjectNotFoundException(f"Project '{project_name}' not found.")
 
-            existing = self.task_repo.get_task_by_title(db, project.id, title)
-            if existing:
-                raise TaskValidationError(f"Task '{title}' already exists in this project.")
+        raise TaskNotFoundException(f"Task '{task_title}' not found.")
 
-            self._validate_deadline(deadline)
+    # ----------------------------------------------------
+    # CREATE (POST)
+    # ----------------------------------------------------
+    def create_task(self, project_name: str, data) -> Task:
+        """Create a new task in a specific project."""
+        project = self.project_repo.get_by_name(project_name)
+        if not project:
+            raise ProjectNotFoundException(f"Project '{project_name}' not found.")
 
-            task = self.task_repo.create(
-                db,
-                title=title,
-                description=description,
-                deadline=deadline,
-                status="todo",
-                project_id=project.id
-            )
+        # Check duplicate title
+        existing = self.task_repo.get_task_by_title(project.id, data.title)
+        if existing:
+            raise TaskValidationError(f"Task '{data.title}' already exists in this project.")
 
-            return {
-                "message": "Task created successfully",
-                "task": task
-            }
+        return self.task_repo.create(
+            title=data.title,
+            description=data.description,
+            deadline=data.deadline,
+            status=data.status,
+            project_id=project.id,
+        )
 
-    # ------------------------------------
-    # Edit Task
-    # ------------------------------------
-    def edit_task(self, project_name, task_title,
-                  new_title=None, new_desc=None, new_deadline=None, new_status=None):
+    # ----------------------------------------------------
+    # READ – LIST & GET
+    # ----------------------------------------------------
+    def list_tasks(self, project_name: str) -> list[Task]:
+        """List all tasks belonging to a specific project."""
+        project = self.project_repo.get_by_name(project_name)
+        if not project:
+            raise ProjectNotFoundException(f"Project '{project_name}' not found.")
+        return self.task_repo.get_tasks_by_project_name(project_name)
 
-        with SessionLocal() as db:
+    def get_task(self, project_name: str, task_title: str) -> Task:
+        """Retrieve a task by its title within a project."""
+        return self._get_task_or_404(project_name, task_title)
 
-            project = self.project_repo.get_by_name(db, project_name)
-            if not project:
-                raise ProjectNotFoundException(f"Project '{project_name}' not found.")
+    # ----------------------------------------------------
+    # PATCH – Partial Update
+    # ----------------------------------------------------
+    def update_task(self, project_name: str, task_title: str, data) -> Task:
+        """Partially update task fields."""
+        task = self._get_task_or_404(project_name, task_title)
 
-            task = self.task_repo.get_task_by_title(db, project.id, task_title)
-            if not task:
-                raise TaskNotFoundException(f"Task '{task_title}' not found.")
+        # Title
+        if data.title is not None:
+            if data.title != task.title:
+                duplicate = self.task_repo.get_task_by_title(task.project_id, data.title)
+                if duplicate:
+                    raise TaskValidationError(f"Task '{data.title}' already exists in this project.")
+            task.title = data.title
 
-            if new_title:
-                duplicate = self.task_repo.get_task_by_title(db, project.id, new_title)
-                if duplicate and duplicate.id != task.id:
-                    raise TaskValidationError(
-                        f"Another task with title '{new_title}' already exists."
-                    )
-                task.title = new_title
+        # Description
+        if data.description is not None:
+            task.description = data.description
 
-            if new_desc:
-                task.description = new_desc
+        # Status
+        if data.status is not None:
+            task.status = data.status
 
-            if new_deadline:
-                self._validate_deadline(new_deadline)
-                task.deadline = new_deadline
+        # Deadline
+        if data.deadline is not None:
+            task.deadline = data.deadline
 
-            if new_status:
-                self._validate_status(new_status)
-                task.status = new_status
+        return self.task_repo.update(task)
 
-            updated = self.task_repo.update(db, task)
+    # ----------------------------------------------------
+    # PATCH – STATUS ONLY
+    # ----------------------------------------------------
+    def update_status(self, project_name: str, task_title: str, new_status: str) -> Task:
+        """Update only the task status."""
+        task = self._get_task_or_404(project_name, task_title)
+        task.status = new_status
+        return self.task_repo.update(task)
 
-            return {
-                "message": "Task updated successfully",
-                "task": updated
-            }
+    # ----------------------------------------------------
+    # DELETE
+    # ----------------------------------------------------
+    def delete_task(self, project_name: str, task_title: str) -> bool:
+        """Delete a task from a specific project."""
+        task = self._get_task_or_404(project_name, task_title)
+        self.task_repo.delete(task)
+        return True
 
-    # ------------------------------------
-    # Update Only Status
-    # ------------------------------------
-    def update_status(self, project_name, task_title, new_status):
-        with SessionLocal() as db:
+    # ----------------------------------------------------
+    # CLOSE LATE TASKS
+    # ----------------------------------------------------
+    def close_late_tasks(self) -> int:
+        """
+        Automatically mark overdue tasks as 'done'.
+        Returns the number of tasks closed.
+        """
+        now = datetime.utcnow()
+        late_tasks = (
+            self.db.query(Task)
+            .filter(Task.deadline < now)
+            .filter(Task.status != "done")
+            .all()
+        )
 
-            project = self.project_repo.get_by_name(db, project_name)
-            if not project:
-                raise ProjectNotFoundException(f"Project '{project_name}' not found.")
+        for task in late_tasks:
+            task.status = "done"
 
-            task = self.task_repo.get_task_by_title(db, project.id, task_title)
-            if not task:
-                raise TaskNotFoundException(f"Task '{task_title}' not found.")
-
-            self._validate_status(new_status)
-            task.status = new_status
-
-            updated = self.task_repo.update(db, task)
-
-            return {
-                "message": "Status updated",
-                "task": updated
-            }
-
-    # ------------------------------------
-    # Delete Task
-    # ------------------------------------
-    def delete_task(self, project_name, task_title):
-        with SessionLocal() as db:
-
-            project = self.project_repo.get_by_name(db, project_name)
-            if not project:
-                raise ProjectNotFoundException(f"Project '{project_name}' not found.")
-
-            task = self.task_repo.get_task_by_title(db, project.id, task_title)
-            if not task:
-                raise TaskNotFoundException(f"Task '{task_title}' not found.")
-
-            self.task_repo.delete(db, task)
-
-            return {"message": "Task deleted successfully"}
-
-    # ------------------------------------
-    # PRIVATE VALIDATIONS
-    # ------------------------------------
-    def _validate_deadline(self, date_str):
-        try:
-            datetime.strptime(date_str, "%Y-%m-%d")
-        except ValueError:
-            raise TaskValidationError("Deadline must be YYYY-MM-DD")
-
-    def _validate_status(self, status):
-        if status not in self.VALID_STATUSES:
-            raise TaskValidationError(
-                f"Invalid status. Choose one of: {', '.join(self.VALID_STATUSES)}"
-            )
-
-    # ------------------------------------
-    # AUTO-CLOSE OVERDUE TASKS
-    # ------------------------------------
-    def autoclose_overdue_tasks(self):
-        with SessionLocal() as db:
-            today = datetime.now().date()
-
-            overdue_tasks = (
-                db.query(self.task_repo.model)
-                .filter(self.task_repo.model.deadline < today)
-                .filter(self.task_repo.model.status != "done")
-                .all()
-            )
-
-            for task in overdue_tasks:
-                task.status = "done"
-
-            db.commit()
-            return len(overdue_tasks)
+        self.db.commit()
+        return len(late_tasks)
